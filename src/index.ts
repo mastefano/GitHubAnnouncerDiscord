@@ -1,15 +1,19 @@
 import GithubRequestHandler from "./classes/GitHub/GithubRequestHandler.js";
 import type {OctokitResponse} from "@octokit/types";
 import DiscordMessageSender from "./classes/Discord/DiscordMessageSender.js";
-import UpdateStateStore from "./classes/Internal/UpdateStateStore.js";
 import EnvValidator from "./classes/Internal/EnvValidator.js";
+import DatabaseHandler from "./classes/Database/DatabaseHandler.js";
+import TableHandler from "./classes/Database/TableHandler.js";
 import dotenv from 'dotenv';
+import Database from "better-sqlite3";
 
 dotenv.config();
+
 
 const envValidator: EnvValidator = new EnvValidator();
 
 if (envValidator.validate()) {
+
     const requestHandler = new GithubRequestHandler();
 
     const discordMessageSender = new DiscordMessageSender();
@@ -28,6 +32,7 @@ if (envValidator.validate()) {
     }
     console.log("GitHubAnnouncer started... ");
 
+    const databaseHandler: DatabaseHandler = new DatabaseHandler(process.env.DB_TABLE_NAME!);
     let runCount: number = 0;
     let isCurrentlyRunning: boolean = false;
 
@@ -54,13 +59,18 @@ if (envValidator.validate()) {
             const latestCommitLink: string = getCommits.data[0].html_url;
             const latestCommitAuthor: string = getCommits.data[0].commit.author.name;
 
-            // Update store.txt
-            const updateStateStore = new UpdateStateStore(updatedAt);
+            //SQLite3
+            const db: Database.Database = databaseHandler.getConnection();
+            const columns: string[] = [
+                "repo",
+                "updated_at"
+            ];
+            const tableHandler: TableHandler = new TableHandler(db, process.env.DB_TABLE_NAME!, columns);
 
-
-            if (updateStateStore.init()) {
+            if (tableHandler.hasRepoUpdated(process.env.GITHUB_REPO!, updatedAt)) {
                 console.log(`Found new commit, sending new message to ${process.env.DISCORD_TEXT_CHANNEL!} and creating new thread in ${process.env.DISCORD_FORUM_CHANNEL!}.`);
-
+                // Insert new date into database
+                tableHandler.upsert(process.env.GITHUB_REPO!, updatedAt);
                 const threadText =
                     getThreadText(repoName, latestCommit.slice(0,7), latestCommitLink, latestCommitAuthor);
 
@@ -75,7 +85,9 @@ if (envValidator.validate()) {
             runCount++;
         }
     }
+
     main();
+
     setInterval(() => {
         main().catch(console.error);
     }, (Number(process.env.CHECK_FREQUENCY_IN_MINUTES) * 60) * 1000)

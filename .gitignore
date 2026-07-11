@@ -3,3 +3,9 @@ dist/
 .env
 !.env.example
 .idea
+
+# SQLite runtime data (created by DatabaseHandler at runtime, not source)
+database-store/
+
+# macOS
+.DS_Store

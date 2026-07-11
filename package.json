@@ -23,11 +23,13 @@
   "type": "module",
   "devDependencies": {
     "@octokit/types": "^16.0.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^26.1.1",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
     "dotenv": "^17.4.2",
     "octokit": "^5.0.5"
   }
