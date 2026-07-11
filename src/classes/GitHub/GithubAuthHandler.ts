@@ -1,6 +1,5 @@
 import {Octokit} from "octokit";
-import dotenv from 'dotenv';
-dotenv.config();
+
 export default class GithubAuthHandler {
     private readonly authToken: string;
 

@@ -1,8 +1,5 @@
 import fs from 'fs';
 import path from "node:path";
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 export default class UpdateStateStore {
     private readonly storeDir: string;

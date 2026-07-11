@@ -2,36 +2,81 @@ import GithubRequestHandler from "./classes/GitHub/GithubRequestHandler.js";
 import type {OctokitResponse} from "@octokit/types";
 import DiscordMessageSender from "./classes/Discord/DiscordMessageSender.js";
 import UpdateStateStore from "./classes/Internal/UpdateStateStore.js";
-const requestHandler = new GithubRequestHandler();
+import EnvValidator from "./classes/Internal/EnvValidator.js";
+import dotenv from 'dotenv';
 
-const discordMessageSender = new DiscordMessageSender();
+dotenv.config();
 
-function getMessageText(repo: string): string {
-    return `UPDATE! ${repo} got updated!`;
-}
-let isCurrentlyRunning: boolean = false;
-async function main() {
-    if (isCurrentlyRunning) {
-        console.log("Service is currently still executing, skipping...");
+const envValidator: EnvValidator = new EnvValidator();
+
+if (envValidator.validate()) {
+    const requestHandler = new GithubRequestHandler();
+
+    const discordMessageSender = new DiscordMessageSender();
+
+    function getMessageText(repo: string): string {
+        return `UPDATE! ${repo} got updated!`;
     }
 
-    isCurrentlyRunning = true;
+    function getThreadText(repo: string, commitSha: string, commitLink: string, author: string): {ThreadTitle: string; ThreadContent: string;} {
+        const formatCommitSha: string = `\`${commitSha}\``;
+        const formatCommitAuthor: string = `**${author}**`;
+        return {
+            "ThreadTitle": `${repo} -> ${commitSha} Discussion`,
+            "ThreadContent": `Full commit sha: ${formatCommitSha}\nCommit link: ${commitLink}\nAuthor: ${formatCommitAuthor}`
+        };
+    }
+    console.log("GitHubAnnouncer started... ");
 
-    try {
-        const getRequest: OctokitResponse<any> = await requestHandler.getRequest();
-        const updatedAt = getRequest.data.updated_at;
-        const updateStateStore = new UpdateStateStore(updatedAt);
-        if (updateStateStore.init()) {
-            await discordMessageSender.sendMessage("1525496492264001566", getMessageText(getRequest.data.html_url));
+    let runCount: number = 0;
+    let isCurrentlyRunning: boolean = false;
+
+    async function main(): Promise<void> {
+        if (runCount !== 0) {
+            console.log(`[Run ${runCount}] -> Checking...`)
         }
-    } catch (e) {
-        console.error(`Error in loop: ${e}`);
-    } finally {
-        isCurrentlyRunning = false;
-    }
-    // console.log(getRequest);
-}
+        if (isCurrentlyRunning) {
+            console.log("Service is currently still executing, skipping...");
+            return;
+        }
 
-setInterval(() => {
-    main().catch(console.error);
-}, 30_000)
+        isCurrentlyRunning = true;
+
+        try {
+            // General data
+            const getRequest: OctokitResponse<any> = await requestHandler.getGeneralData();
+            const repoName: string = getRequest.data.full_name;
+            const updatedAt: string = getRequest.data.updated_at;
+
+            // Commit data
+            const getCommits: OctokitResponse<any> = await requestHandler.getLatestCommit();
+            const latestCommit: string = getCommits.data[0].sha;
+            const latestCommitLink: string = getCommits.data[0].html_url;
+            const latestCommitAuthor: string = getCommits.data[0].commit.author.name;
+
+            // Update store.txt
+            const updateStateStore = new UpdateStateStore(updatedAt);
+
+
+            if (updateStateStore.init()) {
+                console.log(`Found new commit, sending new message to ${process.env.DISCORD_TEXT_CHANNEL!} and creating new thread in ${process.env.DISCORD_FORUM_CHANNEL!}.`);
+
+                const threadText =
+                    getThreadText(repoName, latestCommit.slice(0,7), latestCommitLink, latestCommitAuthor);
+
+                await discordMessageSender.sendMessage(process.env.DISCORD_TEXT_CHANNEL!, getMessageText(repoName));
+                await discordMessageSender.createNewThread(process.env.DISCORD_FORUM_CHANNEL!, threadText["ThreadTitle"], threadText["ThreadContent"]);
+                console.log(`Successfully sent new message and thread to ${process.env.DISCORD_TEXT_CHANNEL!}/${process.env.DISCORD_FORUM_CHANNEL!} respectively.`)
+            }
+        } catch (e) {
+            console.error(`Error in loop: ${e}`);
+        } finally {
+            isCurrentlyRunning = false;
+            runCount++;
+        }
+    }
+    main();
+    setInterval(() => {
+        main().catch(console.error);
+    }, (Number(process.env.CHECK_FREQUENCY_IN_MINUTES) * 60) * 1000)
+}
