@@ -1,5 +1,6 @@
 import DiscordHeaderHandler from "./DiscordHeaderHandler.js";
 import type {DiscordHeader} from "./types/DiscordHeader.type.js";
+import type {TextMessages} from "./types/Messages.type.js";
 
 export default class DiscordMessageSender {
     private readonly discordBaseUrl: string;

@@ -1,0 +1,8 @@
+services:
+  github-announcer:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./database-store:/app/database-store
+    restart: unless-stopped
