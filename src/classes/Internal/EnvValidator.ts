@@ -16,7 +16,7 @@ export default class EnvValidator {
 
     public validate(): boolean {
         const missing: string[] = EnvValidator.REQUIRED_VARS.filter(
-            (key) => !process.env[key] || process.env[key]!.trim().length === 0
+            (key: string): boolean => !process.env[key] || process.env[key]!.trim().length === 0
         );
 
         if (missing.length > 0) {

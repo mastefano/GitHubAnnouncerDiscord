@@ -1,7 +1,5 @@
-import EnvValidator from "./EnvValidator.js";
 import GithubRequestHandler from "../GitHub/GithubRequestHandler.js";
 import GithubResponseMapper from "../GitHub/GithubResponseMapper.js";
-import Database from "better-sqlite3";
 import DatabaseHandler from "../Database/DatabaseHandler.js";
 import TableHandler from "../Database/TableHandler.js";
 import DiscordMessageMapper from "../Discord/DiscordMessageMapper.js";
@@ -51,8 +49,10 @@ export default class Announcer {
 
             // Map messages
             const discordMessageMapper: DiscordMessageMapper =
-                new DiscordMessageMapper(generalData.repoName, generalData.updatedAt,
-                    commitData.latestCommit, commitData.latestCommitLink, commitData.latestCommitAuthor)
+                new DiscordMessageMapper(generalData.repoName,
+                    commitData.latestCommit, commitData.latestCommitLink,
+                    commitData.latestCommitAuthor)
+
             const forumMessage: ForumMessages = discordMessageMapper.mapForumMessages();
 
             if (this.tableHandler.hasRepoUpdated(process.env.GITHUB_REPO!, generalData["updatedAt"])) {

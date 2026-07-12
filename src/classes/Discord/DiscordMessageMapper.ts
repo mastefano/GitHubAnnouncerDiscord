@@ -3,14 +3,12 @@ import type {StrFormat} from "./types/StrFormat.type.js";
 
 export default class DiscordMessageMapper {
     private readonly repoName: string;
-    private readonly updatedAt: string;
     private readonly latestCommit: string;
     private readonly latestCommitLink: string;
     private readonly latestCommitAuthor: string;
 
-    constructor(repoName: string, updatedAt: string, latestCommit: string, latestCommitLink: string, latestCommitAuthor: string) {
+    constructor(repoName: string, latestCommit: string, latestCommitLink: string, latestCommitAuthor: string) {
         this.repoName = repoName;
-        this.updatedAt = updatedAt;
         this.latestCommit = latestCommit;
         this.latestCommitLink = latestCommitLink;
         this.latestCommitAuthor = latestCommitAuthor;
