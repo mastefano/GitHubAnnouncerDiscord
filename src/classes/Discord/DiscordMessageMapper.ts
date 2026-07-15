@@ -1,5 +1,4 @@
-import type {TextMessages, ForumMessages} from "./types/Messages.type.js";
-import type {StrFormat} from "./types/StrFormat.type.js";
+import type {TextMessages, ForumMessagesEmbedded} from "./types/Messages.type.js";
 
 export default class DiscordMessageMapper {
     private readonly repoName: string;
@@ -14,24 +13,33 @@ export default class DiscordMessageMapper {
         this.latestCommitAuthor = latestCommitAuthor;
     }
 
-    private formatStr(str: string): StrFormat {
-        return {
-            "Bold": `**${str}**`,
-            "Codequote": `\`${str}\``,
-        }
-    }
-
     public mapTextMessages(): TextMessages {
         return {
-            "TextMessageContent": `UPDATE! ${this.repoName} got updated by ${this.latestCommitAuthor}. Created new Thread for discussion!`
+            embeds: [{
+                title: `${this.repoName} >> ${this.latestCommit.slice(0, 7)}`,
+                url: this.latestCommitLink,
+                description: `Commited by **${this.latestCommitAuthor}**`,
+                color: 5814783,
+                fields: [
+                    {name: "Full Sha", value: `\`${this.latestCommit}\``, inline: true}
+                ],
+                timestamp: new Date().toISOString(),
+            }],
         }
     }
 
-    public mapForumMessages(): ForumMessages {
+    public mapForumEmbedded(): ForumMessagesEmbedded {
         return {
-            "ThreadTitle": `${this.repoName} -> ${this.latestCommit.slice(0, 7)} Discussion`,
-            "ThreadContent":
-                `Full commit sha: ${this.formatStr(this.latestCommit).Codequote}\nCommit link: ${this.latestCommitLink}\nAuthor: ${this.formatStr(this.latestCommitAuthor).Bold}`
+            embeds: [{
+                title: `${this.repoName} >> ${this.latestCommit.slice(0, 7)}`,
+                url: this.latestCommitLink,
+                description: `Commited by **${this.latestCommitAuthor}**`,
+                color: 5814783,
+                fields: [
+                    {name: "Full Sha", value: `\`${this.latestCommit}\``, inline: true}
+                ],
+                timestamp: new Date().toISOString(),
+            }],
         }
     }
 

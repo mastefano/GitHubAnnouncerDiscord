@@ -6,7 +6,7 @@ import DiscordMessageMapper from "../Discord/DiscordMessageMapper.js";
 import DiscordMessageSender from "../Discord/DiscordMessageSender.js";
 import type {OctokitResponse} from "@octokit/types";
 import type {MapCommitDataResponse, MapGeneralDataResponse} from "../GitHub/types/MapDataResponse.type.js";
-import type {ForumMessages} from "../Discord/types/Messages.type.js";
+import type {ForumMessagesEmbedded, TextMessages} from "../Discord/types/Messages.type.js";
 
 export default class Announcer {
     private readonly requestHandler: GithubRequestHandler;
@@ -53,7 +53,8 @@ export default class Announcer {
                     commitData.latestCommit, commitData.latestCommitLink,
                     commitData.latestCommitAuthor)
 
-            const forumMessage: ForumMessages = discordMessageMapper.mapForumMessages();
+            const textMessageEmbedded: TextMessages = discordMessageMapper.mapTextMessages();
+            const forumMessageEmbedded: ForumMessagesEmbedded = discordMessageMapper.mapForumEmbedded();
 
             if (this.tableHandler.hasRepoUpdated(process.env.GITHUB_REPO!, generalData["updatedAt"])) {
                 console.log(`Found new commit, sending new message to ${process.env.DISCORD_TEXT_CHANNEL!} and creating new thread in ${process.env.DISCORD_FORUM_CHANNEL!}.`);
@@ -62,12 +63,17 @@ export default class Announcer {
                 this.tableHandler.upsert(process.env.GITHUB_REPO!, generalData["updatedAt"]);
 
                 // Send messages
-                await this.discordMessageSender.sendMessage(process.env.DISCORD_TEXT_CHANNEL!, discordMessageMapper.mapTextMessages().TextMessageContent);
-                await this.discordMessageSender.createNewThread(
+                if (process.env.DISCORD_SEND_NORMAL_TEXT_MSG! as string === 'true') {
+                    await this.discordMessageSender.sendMessage(
+                        process.env.DISCORD_TEXT_CHANNEL!,
+                        textMessageEmbedded
+                    );
+                }
+                await this.discordMessageSender.createNewThreadWithEmbed(
                     process.env.DISCORD_FORUM_CHANNEL!,
-                    forumMessage.ThreadTitle,
-                    forumMessage.ThreadContent
-                );
+                    forumMessageEmbedded.embeds[0]!.title,
+                    forumMessageEmbedded
+                )
                 console.log(`Successfully sent new message and thread to ${process.env.DISCORD_TEXT_CHANNEL!}/${process.env.DISCORD_FORUM_CHANNEL!} respectively.`)
             }
         } catch (e) {

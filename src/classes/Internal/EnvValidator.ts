@@ -8,6 +8,7 @@ export default class EnvValidator {
         "DISCORD_BOT_TOKEN",
         "DISCORD_TEXT_CHANNEL",
         "DISCORD_FORUM_CHANNEL",
+        "DISCORD_SEND_NORMAL_TEXT_MSG",
         "CHECK_FREQUENCY_IN_MINUTES",
         "DB_TABLE_NAME",
         "GITHUB_USER",

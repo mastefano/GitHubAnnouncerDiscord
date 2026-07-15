@@ -1,5 +1,6 @@
 import DiscordHeaderHandler from "./DiscordHeaderHandler.js";
 import type {DiscordHeader} from "./types/DiscordHeader.type.js";
+import type {ForumMessagesEmbedded, TextMessages} from "./types/Messages.type.js";
 
 export default class DiscordMessageSender {
     private readonly discordBaseUrl: string;
@@ -18,32 +19,35 @@ export default class DiscordMessageSender {
         return `${this.discordBaseUrl}${this.discordApiVersion}/channels/${channelId}/${isThread ? "threads" : "messages"}`;
     }
 
-    public async sendMessage(channelId: string, messageContent: string): Promise<unknown> {
+    public async sendMessage(channelId: string, embedData: TextMessages): Promise<unknown> {
         const response: Response = await fetch(this.buildUrl(channelId, false), {
             method: 'POST',
             headers: this.headers,
-            body: JSON.stringify({ content: messageContent })
+            body: JSON.stringify({
+                embeds: embedData.embeds,
+            })
         })
         if (!response.ok) {
-            throw new Error(`sendMessage to channel ${channelId} with messageContent ${messageContent} failed: \n ${response.status}: ${response.statusText}`);
+            throw new Error(`sendMessage to channel ${channelId} with messageContent ${JSON.stringify(embedData.embeds)} failed: \n ${response.status}: ${response.statusText}`);
         }
 
         return await response.json();
     }
 
-    public async createNewThread(channelId: string, threadTitle: string, threadContent: string): Promise<unknown> {
+    public async createNewThreadWithEmbed(channelId: string, threadTitle: string, embedData: ForumMessagesEmbedded): Promise<unknown> {
         const response: Response = await fetch(this.buildUrl(channelId, true), {
             method: 'POST',
             headers: this.headers,
             body: JSON.stringify({
                 name: threadTitle,
                 message: {
-                    content: threadContent
+                    embeds: embedData.embeds,
                 }
             })
-        });
+        })
         if (!response.ok) {
-            throw new Error(`sendMessage to channel ${channelId} with threadContent ${threadContent} failed: \n ${response.status}: ${response.statusText}`);
+            throw new Error(`createNewThreadWithEmbed to channel ${channelId} with 
+            threadContent ${JSON.stringify(embedData.embeds)} failed: \n ${response.status}: ${response.statusText}`);
         }
         return await response.json();
     }
