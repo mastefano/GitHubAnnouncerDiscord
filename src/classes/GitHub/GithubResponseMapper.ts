@@ -14,6 +14,7 @@ export default class GithubResponseMapper {
             "latestCommit": response.data[0].sha,
             "latestCommitLink": response.data[0].html_url,
             "latestCommitAuthor": response.data[0].commit.author.name,
+            "latestCommitMessage": response.data[0].commit.message,
         }
     }
 }

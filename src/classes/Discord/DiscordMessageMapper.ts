@@ -5,12 +5,15 @@ export default class DiscordMessageMapper {
     private readonly latestCommit: string;
     private readonly latestCommitLink: string;
     private readonly latestCommitAuthor: string;
+    private readonly latestCommitMessage: string;
 
-    constructor(repoName: string, latestCommit: string, latestCommitLink: string, latestCommitAuthor: string) {
+    constructor(repoName: string, latestCommit: string, latestCommitLink: string, latestCommitAuthor: string, latestCommitMessage: string) {
         this.repoName = repoName;
         this.latestCommit = latestCommit;
         this.latestCommitLink = latestCommitLink;
         this.latestCommitAuthor = latestCommitAuthor;
+        this.latestCommitMessage = latestCommitMessage;
+
     }
 
     public mapTextMessages(): TextMessages {
@@ -36,7 +39,8 @@ export default class DiscordMessageMapper {
                 description: `Commited by **${this.latestCommitAuthor}**`,
                 color: 5814783,
                 fields: [
-                    {name: "Full Sha", value: `\`${this.latestCommit}\``, inline: true}
+                    {name: "Full Sha", value: `\`${this.latestCommit}\``, inline: true},
+                    {name: "Commit message", value:`\`\`\` ${this.latestCommitMessage} \`\`\` `, inline: true},
                 ],
                 timestamp: new Date().toISOString(),
             }],
