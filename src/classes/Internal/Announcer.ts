@@ -51,7 +51,7 @@ export default class Announcer {
             const discordMessageMapper: DiscordMessageMapper =
                 new DiscordMessageMapper(generalData.repoName,
                     commitData.latestCommit, commitData.latestCommitLink,
-                    commitData.latestCommitAuthor)
+                    commitData.latestCommitAuthor, commitData.latestCommitMessage)
 
             const textMessageEmbedded: TextMessages = discordMessageMapper.mapTextMessages();
             const forumMessageEmbedded: ForumMessagesEmbedded = discordMessageMapper.mapForumEmbedded();
